@@ -28,9 +28,8 @@ class FlutterSensorsPlugin() : FlutterPlugin, MethodCallHandler {
     }
 
     constructor(context: Context, binaryMessenger: BinaryMessenger) : this() {
-        val context = binding.applicationContext
-        this.messenger = binaryMessenger
-        this.sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        messenger = binaryMessenger
+        sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     }
 
     private val eventChannels = hashMapOf<Int, EventChannel>()
@@ -41,8 +40,8 @@ class FlutterSensorsPlugin() : FlutterPlugin, MethodCallHandler {
     // Flutter plugin binding api v2
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         val context = binding.applicationContext
-        this.messenger = binding.binaryMessenger
-        this.sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        messenger = binding.binaryMessenger
+        sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
         val methodChannel = MethodChannel(messenger, CHANNEL_NAME)
         methodChannel.setMethodCallHandler(this)

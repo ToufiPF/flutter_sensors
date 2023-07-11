@@ -34,27 +34,20 @@ class _MyAppState extends State<MyApp> {
     super.dispose();
   }
 
-  void _checkAccelerometerStatus() async {
-    await SensorManager()
-        .isSensorAvailable(Sensors.ACCELEROMETER)
-        .then((result) {
-      setState(() {
-        _accelAvailable = result;
+  Future<void> _checkAccelerometerStatus() =>
+      SensorManager().isSensorAvailable(Sensors.ACCELEROMETER).then((result) {
+        setState(() => _accelAvailable = result);
       });
-    });
-  }
 
-  Future<void> _startAccelerometer() async {
+  void _startAccelerometer() {
     if (_accelSubscription != null) return;
     if (_accelAvailable) {
-      final stream = await SensorManager().sensorUpdates(
+      final stream = SensorManager().sensorUpdates(
         sensorId: Sensors.ACCELEROMETER,
-        interval: Sensors.SENSOR_DELAY_FASTEST,
+        interval: Sensors.SENSOR_DELAY_GAME,
       );
       _accelSubscription = stream.listen((sensorEvent) {
-        setState(() {
-          _accelData = sensorEvent.data;
-        });
+        setState(() => _accelData = sensorEvent.data);
       });
     }
   }
@@ -65,23 +58,17 @@ class _MyAppState extends State<MyApp> {
     _accelSubscription = null;
   }
 
-  void _checkGyroscopeStatus() async {
-    await SensorManager().isSensorAvailable(Sensors.GYROSCOPE).then((result) {
-      setState(() {
-        _gyroAvailable = result;
+  void _checkGyroscopeStatus() =>
+      SensorManager().isSensorAvailable(Sensors.GYROSCOPE).then((result) {
+        setState(() => _gyroAvailable = result);
       });
-    });
-  }
 
-  Future<void> _startGyroscope() async {
+  void _startGyroscope() {
     if (_gyroSubscription != null) return;
     if (_gyroAvailable) {
-      final stream =
-          await SensorManager().sensorUpdates(sensorId: Sensors.GYROSCOPE);
+      final stream = SensorManager().sensorUpdates(sensorId: Sensors.GYROSCOPE);
       _gyroSubscription = stream.listen((sensorEvent) {
-        setState(() {
-          _gyroData = sensorEvent.data;
-        });
+        setState(() => _gyroData = sensorEvent.data);
       });
     }
   }
