@@ -12,15 +12,15 @@ class _SensorChannel {
   static num? _durationToNumber(Duration delay) {
     if (Platform.isAndroid) {
       // Return the special flags for Android (other values' rate is not guaranteed)
-      switch (delay.inMicroseconds) {
-        case Sensors.SENSOR_DELAY_NORMAL.inMicroseconds:
-          return 3;
-        case Sensors.SENSOR_DELAY_UI.inMicroseconds:
-          return 2;
-        case Sensors.SENSOR_DELAY_GAME.inMicroseconds:
-          return 1;
-        default:
-          return delay.inMicroseconds;
+      final us = delay.inMicroseconds;
+      if (us == Sensors.SENSOR_DELAY_NORMAL.inMicroseconds) {
+        return 3;
+      } else if (us == Sensors.SENSOR_DELAY_UI.inMicroseconds) {
+        return 2;
+      } else if (us == Sensors.SENSOR_DELAY_GAME.inMicroseconds) {
+        return 1;
+      } else {
+        return us;
       }
     } else {
       return delay.inMicroseconds / 1e6;
@@ -55,11 +55,11 @@ class _SensorChannel {
 
   /// Check if the sensor is available in the device.
   Future<bool> isSensorAvailable(int sensorId) async {
-    final bool available = _methodChannel.invokeMethod(
+    final available = await _methodChannel.invokeMethod<bool>(
       'is_sensor_available',
       {"sensorId": sensorId},
     );
-    return available;
+    return available ?? false;
   }
 
   /// Updates the interval between updates for an specific sensor.
