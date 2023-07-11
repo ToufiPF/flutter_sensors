@@ -112,30 +112,25 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin {
     
     private func startEventChannel(sensorId: Int, interval: Double)->Bool{
         var started = true
+        let channel = FlutterEventChannel(name:"flutter_sensors/\(sensorId)", binaryMessenger: registrar.messenger())
         switch sensorId {
         case AccelerometerStreamHandler.SENSOR_ID:
-            let accelerometerEventChannel = FlutterEventChannel(name:"flutter_sensors/\(AccelerometerStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
-            accelerometerEventChannel.setStreamHandler(accelerometerStreamHandler)
+            channel.setStreamHandler(accelerometerStreamHandler)
             break
         case GyroscopeStreamHandler.SENSOR_ID:
-            let gyroscopeEventChannel = FlutterEventChannel(name:"flutter_sensors/\(GyroscopeStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
-            gyroscopeEventChannel.setStreamHandler(gyroscopeStreamHandler)
+            channel.setStreamHandler(gyroscopeStreamHandler)
             break
         case MagneticFieldStreamHandler.SENSOR_ID:
-            let magneticFieldEventChannel = FlutterEventChannel(name:"flutter_sensors/\(MagneticFieldStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
-            magneticFieldEventChannel.setStreamHandler(magneticFieldStreamHandler)
+            channel.setStreamHandler(magneticFieldStreamHandler)
             break
         case LinearAccelerationStreamHandler.SENSOR_ID:
-            let linearAccelerationEventChannel = FlutterEventChannel(name:"flutter_sensors/\(LinearAccelerationStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
-            linearAccelerationEventChannel.setStreamHandler(linearAccelerationStreamHandler)
+            channel.setStreamHandler(linearAccelerationStreamHandler)
             break
         case StepDetectorStreamHandler.SENSOR_ID:
-            let stepDetectorEventChannel = FlutterEventChannel(name:"flutter_sensors/\(StepDetectorStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
-            stepDetectorEventChannel.setStreamHandler(stepDetectorStreamHandler)
+            channel.setStreamHandler(stepDetectorStreamHandler)
             break
         case HeadingStreamHandler.SENSOR_ID:
-            let headingEventChannel = FlutterEventChannel(name:"flutter_sensors/\(HeadingStreamHandler.SENSOR_ID)", binaryMessenger: registrar.messenger())
-            headingEventChannel.setStreamHandler(headingStreamHandler)
+            channel.setStreamHandler(headingStreamHandler)
             break
         default:
             started = false
