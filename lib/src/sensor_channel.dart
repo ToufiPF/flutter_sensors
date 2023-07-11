@@ -4,6 +4,7 @@ typedef SensorCallback(int sensor, List<double> data, int accuracy);
 
 class _SensorChannel {
   static const String channelName = 'flutter_sensors';
+
   /// Method channel of the plugin.
   static const MethodChannel _methodChannel = MethodChannel(channelName);
 
@@ -11,12 +12,16 @@ class _SensorChannel {
   static num? _durationToNumber(Duration delay) {
     if (Platform.isAndroid) {
       // Return the special flags for Android (other values' rate is not guaranteed)
-      return switch (delay.inMicroseconds) {
-        Sensors.SENSOR_DELAY_NORMAL.inMicroseconds => 3,
-        Sensors.SENSOR_DELAY_UI.inMicroseconds => 2,
-        Sensors.SENSOR_DELAY_GAME.inMicroseconds => 1,
-        _ => delay.inMicroseconds,
-      };
+      switch (delay.inMicroseconds) {
+        case Sensors.SENSOR_DELAY_NORMAL.inMicroseconds:
+          return 3;
+        case Sensors.SENSOR_DELAY_UI.inMicroseconds:
+          return 2;
+        case Sensors.SENSOR_DELAY_GAME.inMicroseconds:
+          return 1;
+        default:
+          return delay.inMicroseconds;
+      }
     } else {
       return delay.inMicroseconds / 1e6;
     }
@@ -30,7 +35,7 @@ class _SensorChannel {
 
   /// Register a sensor update request.
   Stream<SensorEvent> sensorUpdates({
-    required int sensorId, 
+    required int sensorId,
     required Duration interval,
   }) async* {
     Stream<SensorEvent>? sensorStream = _sensorStreams[sensorId];
@@ -39,9 +44,9 @@ class _SensorChannel {
       final channel =
           await _getEventChannel(sensorId: sensorId, arguments: args);
 
-      sensorStream = channel.receiveBroadcastStream().map((e) => 
-          SensorEvent.fromMap(e));
-      _sensorStreams[sensorId] = sensorStream;
+      sensorStream =
+          channel.receiveBroadcastStream().map((e) => SensorEvent.fromMap(e));
+      _sensorStreams[sensorId] = sensorStream!;
     } else {
       await updateSensorInterval(sensorId: sensorId, interval: interval);
     }
@@ -49,17 +54,19 @@ class _SensorChannel {
   }
 
   /// Check if the sensor is available in the device.
-  Future<bool> isSensorAvailable(int sensorId) => 
-      _methodChannel.invokeMethod(
-        'is_sensor_available',
-        {"sensorId": sensorId},
-      );
+  Future<bool> isSensorAvailable(int sensorId) async {
+    final bool available = _methodChannel.invokeMethod(
+      'is_sensor_available',
+      {"sensorId": sensorId},
+    );
+    return available;
+  }
 
   /// Updates the interval between updates for an specific sensor.
   Future<void> updateSensorInterval({
-    required int sensorId, 
+    required int sensorId,
     required Duration interval,
-  }) => 
+  }) =>
       _methodChannel.invokeMethod(
         'update_sensor_interval',
         {"sensorId": sensorId, "interval": _durationToNumber(interval)},
@@ -74,7 +81,7 @@ class _SensorChannel {
       await _methodChannel.invokeMethod("start_event_channel", arguments);
 
       eventChannel = EventChannel("$channelName/$sensorId");
-      _eventChannels[sensorId] = eventChannel;
+      _eventChannels[sensorId] = eventChannel!;
     }
     return eventChannel;
   }

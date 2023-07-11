@@ -29,19 +29,19 @@ class SensorManager {
   /// Opens a stream to receive sensor updates from the desired sensor
   /// defined in the request.
   Stream<SensorEvent> sensorUpdates({
-    required int sensorId, 
+    required int sensorId,
     Duration interval = Sensors.SENSOR_DELAY_NORMAL,
-  }) => 
+  }) =>
       _sensorChannel.sensorUpdates(sensorId: sensorId, interval: interval);
 
-  /// Checks whether the [sensorId] is available in the system 
+  /// Checks whether the [sensorId] is available in the system
   /// and supported by the plugin.
   Future<bool> isSensorAvailable(int sensorId) =>
       _sensorChannel.isSensorAvailable(sensorId);
 
   /// Updates the interval between updates for an specific sensor.
   Future<void> updateSensorInterval({
-    required int sensorId, 
+    required int sensorId,
     required Duration interval,
   }) =>
       _sensorChannel.updateSensorInterval(
