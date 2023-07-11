@@ -3,9 +3,24 @@ part of flutter_sensors;
 typedef SensorCallback(int sensor, List<double> data, int accuracy);
 
 class _SensorChannel {
+  static const String channelName = 'flutter_sensors';
   /// Method channel of the plugin.
-  static const MethodChannel _methodChannel =
-      const MethodChannel('flutter_sensors');
+  static const MethodChannel _methodChannel = MethodChannel(channelName);
+
+  /// Transform the delay duration object to an int value for each platform.
+  static num? _transformDurationToNumber(Duration? delay) {
+    if (Platform.isAndroid) {
+      // Return the special flags for Android (other values' rate is not guaranteed)
+      return switch (delay?.inMicroseconds) {
+        Sensors.SENSOR_DELAY_NORMAL.inMicroseconds => 3,
+        Sensors.SENSOR_DELAY_UI.inMicroseconds => 2,
+        Sensors.SENSOR_DELAY_GAME.inMicroseconds => 1,
+        _ => delay?.inMicroseconds,
+      };
+    } else {
+      return delay?.inSeconds;
+    }
+  }
 
   /// List of subscriptions to the update event channel.
   final Map<int, EventChannel> _eventChannels = {};
@@ -16,16 +31,17 @@ class _SensorChannel {
   /// Register a sensor update request.
   Future<Stream<SensorEvent>> sensorUpdates(
       {required int sensorId, Duration? interval}) async {
-    Stream<SensorEvent>? sensorStream = _getSensorStream(sensorId);
+    Stream<SensorEvent>? sensorStream = _sensorStreams[sensorId];
     interval = interval ?? Sensors.SENSOR_DELAY_NORMAL;
+
     if (sensorStream == null) {
       final args = {"interval": _transformDurationToNumber(interval)};
-      final eventChannel =
+      final channel =
           await _getEventChannel(sensorId: sensorId, arguments: args);
-      sensorStream = eventChannel.receiveBroadcastStream().map((event) {
-        return SensorEvent.fromMap(event);
-      });
-      _sensorStreams.putIfAbsent(sensorId, () => sensorStream!);
+
+      sensorStream = channel.receiveBroadcastStream()
+        .map((event) => SensorEvent.fromMap(event));
+      _sensorStreams[sensorId] = sensorStream;
     } else {
       await updateSensorInterval(sensorId: sensorId, interval: interval);
     }
@@ -51,25 +67,16 @@ class _SensorChannel {
   }
 
   /// Return the stream associated with the given sensor.
-  Stream<SensorEvent>? _getSensorStream(int sensorId) {
-    return _sensorStreams[sensorId];
-  }
-
-  /// Return the stream associated with the given sensor.
   Future<EventChannel> _getEventChannel(
       {required int sensorId, Map arguments = const {}}) async {
     EventChannel? eventChannel = _eventChannels[sensorId];
     if (eventChannel == null) {
       arguments["sensorId"] = sensorId;
       await _methodChannel.invokeMethod("start_event_channel", arguments);
-      eventChannel = EventChannel("flutter_sensors/$sensorId");
-      _eventChannels.putIfAbsent(sensorId, () => eventChannel!);
+
+      eventChannel = EventChannel("$channelName/$sensorId");
+      _eventChannels[sensorId] = eventChannel;
     }
     return eventChannel;
-  }
-
-  /// Transform the delay duration object to an int value for each platform.
-  num? _transformDurationToNumber(Duration? delay) {
-    return Platform.isAndroid ? delay?.inMicroseconds : delay?.inSeconds;
   }
 }

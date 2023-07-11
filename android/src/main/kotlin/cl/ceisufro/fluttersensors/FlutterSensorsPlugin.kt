@@ -8,59 +8,56 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 
 
 class FlutterSensorsPlugin() : FlutterPlugin, MethodCallHandler {
-    private var eventChannels = hashMapOf<Int, EventChannel>()
-    private var streamHandlers = hashMapOf<Int, SensorStreamHandler>()
-    private lateinit var context: Context
-    private lateinit var messenger: BinaryMessenger
-    private lateinit var sensorManager: SensorManager
+    companion object {
+        private const val CHANNEL_NAME = "flutter_sensors"
+        
+        // Flutter plugin binding api v1
+        @Suppress("deprecation")
+        @JvmStatic
+        fun registerWith(registrar: PluginRegistry.Registrar) {
+            val messenger = registrar.messenger()
+            val instance = FlutterSensorsPlugin(registrar.context(), messenger)
+
+            val methodChannel = MethodChannel(messenger, CHANNEL_NAME)
+            methodChannel.setMethodCallHandler(instance)
+            registrar.addViewDestroyListener {
+                instance.removeAllListeners()
+                false
+            }
+        }
+    }
 
     constructor(context: Context, binaryMessenger: BinaryMessenger) : this() {
-        this.context = context
+        val context = binding.applicationContext
         this.messenger = binaryMessenger
         this.sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     }
 
+    private val eventChannels = hashMapOf<Int, EventChannel>()
+    private val streamHandlers = hashMapOf<Int, SensorStreamHandler>()
+    private lateinit var messenger: BinaryMessenger
+    private lateinit var sensorManager: SensorManager
+
+    // Flutter plugin binding api v2
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        val methodChannel = MethodChannel(binding.binaryMessenger, CHANNEL_NAME)
-        this.context = binding.applicationContext
+        val context = binding.applicationContext
         this.messenger = binding.binaryMessenger
         this.sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+
+        val methodChannel = MethodChannel(messenger, CHANNEL_NAME)
         methodChannel.setMethodCallHandler(this)
-    }
-
-    companion object {
-        private const val CHANNEL_NAME = "flutter_sensors"
-
-        @Suppress("deprecation")
-        @JvmStatic
-        fun registerWith(registrar: PluginRegistry.Registrar) {
-            val methodChannel = MethodChannel(registrar.messenger(), CHANNEL_NAME)
-            val context = registrar.context()
-            val binaryMessenger = registrar.messenger()
-            val plugin = FlutterSensorsPlugin(context, binaryMessenger)
-            methodChannel.setMethodCallHandler(plugin)
-            registrar.addViewDestroyListener {
-                plugin.onDestroy()
-                false
-            }
-        }
     }
 
     override fun onDetachedFromEngine(p0: FlutterPlugin.FlutterPluginBinding) {
         removeAllListeners()
     }
 
-    private fun onDestroy() {
-        removeAllListeners()
-    }
-
     private fun removeAllListeners() {
-        eventChannels.forEach {
-            val streamHandler = streamHandlers[it.key]
-            streamHandler?.stopListener()
-            streamHandlers.remove(it.key)
-            it.value.setStreamHandler(null)
-        }
+        eventChannels.values.forEach { it.setStreamHandler(null) }
+        streamHandlers.values.forEach { it.stopListener() }
+
+        eventChannels.clear()
+        streamHandlers.clear()
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
@@ -100,8 +97,6 @@ class FlutterSensorsPlugin() : FlutterPlugin, MethodCallHandler {
             val interval: Int? = dataMap["interval"] as Int?
             if (!eventChannels.containsKey(sensorId)) {
                 val eventChannel = EventChannel(messenger, "flutter_sensors/$sensorId")
-                val sensorManager =
-                    context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
                 val sensorStreamHandler = SensorStreamHandler(sensorManager, sensorId, interval)
                 eventChannel.setStreamHandler(sensorStreamHandler)
                 eventChannels[sensorId] = eventChannel
