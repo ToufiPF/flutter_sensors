@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_sensors/flutter_sensors.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(const MyApp());
 
 class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
   @override
-  _MyAppState createState() => _MyAppState();
+  State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
@@ -98,11 +100,11 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Flutter Sensors Example'),
         ),
         body: Container(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),
           alignment: AlignmentDirectional.topCenter,
           child: Column(
             children: <Widget>[
-              Text(
+              const Text(
                 "Accelerometer Test",
                 textAlign: TextAlign.center,
               ),
@@ -110,44 +112,44 @@ class _MyAppState extends State<MyApp> {
                 "Accelerometer Enabled: $_accelAvailable",
                 textAlign: TextAlign.center,
               ),
-              Padding(padding: EdgeInsets.only(top: 16.0)),
+              const Padding(padding: EdgeInsets.only(top: 16.0)),
               Text(
                 "[0](X) = ${_accelData[0]}",
                 textAlign: TextAlign.center,
               ),
-              Padding(padding: EdgeInsets.only(top: 16.0)),
+              const Padding(padding: EdgeInsets.only(top: 16.0)),
               Text(
                 "[1](Y) = ${_accelData[1]}",
                 textAlign: TextAlign.center,
               ),
-              Padding(padding: EdgeInsets.only(top: 16.0)),
+              const Padding(padding: EdgeInsets.only(top: 16.0)),
               Text(
                 "[2](Z) = ${_accelData[2]}",
                 textAlign: TextAlign.center,
               ),
-              Padding(padding: EdgeInsets.only(top: 16.0)),
+              const Padding(padding: EdgeInsets.only(top: 16.0)),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   MaterialButton(
-                    child: Text("Start"),
                     color: Colors.green,
                     onPressed:
                         _accelAvailable ? () => _startAccelerometer() : null,
+                    child: const Text("Start"),
                   ),
-                  Padding(
+                  const Padding(
                     padding: EdgeInsets.all(8.0),
                   ),
                   MaterialButton(
-                    child: Text("Stop"),
                     color: Colors.red,
                     onPressed:
                         _accelAvailable ? () => _stopAccelerometer() : null,
+                    child: const Text("Stop"),
                   ),
                 ],
               ),
-              Padding(padding: EdgeInsets.only(top: 16.0)),
-              Text(
+              const Padding(padding: EdgeInsets.only(top: 16.0)),
+              const Text(
                 "Gyroscope Test",
                 textAlign: TextAlign.center,
               ),
@@ -155,37 +157,37 @@ class _MyAppState extends State<MyApp> {
                 "Gyroscope Enabled: $_gyroAvailable",
                 textAlign: TextAlign.center,
               ),
-              Padding(padding: EdgeInsets.only(top: 16.0)),
+              const Padding(padding: EdgeInsets.only(top: 16.0)),
               Text(
                 "[0](X) = ${_gyroData[0]}",
                 textAlign: TextAlign.center,
               ),
-              Padding(padding: EdgeInsets.only(top: 16.0)),
+              const Padding(padding: EdgeInsets.only(top: 16.0)),
               Text(
                 "[1](Y) = ${_gyroData[1]}",
                 textAlign: TextAlign.center,
               ),
-              Padding(padding: EdgeInsets.only(top: 16.0)),
+              const Padding(padding: EdgeInsets.only(top: 16.0)),
               Text(
                 "[2](Z) = ${_gyroData[2]}",
                 textAlign: TextAlign.center,
               ),
-              Padding(padding: EdgeInsets.only(top: 16.0)),
+              const Padding(padding: EdgeInsets.only(top: 16.0)),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   MaterialButton(
-                    child: Text("Start"),
                     color: Colors.green,
                     onPressed: _gyroAvailable ? () => _startGyroscope() : null,
+                    child: const Text("Start"),
                   ),
-                  Padding(
+                  const Padding(
                     padding: EdgeInsets.all(8.0),
                   ),
                   MaterialButton(
-                    child: Text("Stop"),
                     color: Colors.red,
                     onPressed: _gyroAvailable ? () => _stopGyroscope() : null,
+                    child: const Text("Stop"),
                   ),
                 ],
               ),
