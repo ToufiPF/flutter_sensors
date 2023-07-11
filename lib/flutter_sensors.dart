@@ -27,20 +27,23 @@ class SensorManager {
   final _SensorChannel _sensorChannel = _SensorChannel();
 
   /// Opens a stream to receive sensor updates from the desired sensor
-  /// defined in the [request]. Returns the future of a stream because
-  /// the sensor event channels are dynamically created and must be
-  /// registered before returning the stream for each channel.
-  Future<Stream<SensorEvent>> sensorUpdates(
-          {required int sensorId, Duration? interval}) =>
+  /// defined in the request.
+  Stream<SensorEvent> sensorUpdates({
+    required int sensorId,
+    Duration interval = Sensors.SENSOR_DELAY_NORMAL,
+  }) =>
       _sensorChannel.sensorUpdates(sensorId: sensorId, interval: interval);
 
-  /// Checks if the [sensorId] is available in the system or supported by the
-  /// plugin.
+  /// Checks whether the [sensorId] is available in the system
+  /// and supported by the plugin.
   Future<bool> isSensorAvailable(int sensorId) =>
       _sensorChannel.isSensorAvailable(sensorId);
 
   /// Updates the interval between updates for an specific sensor.
-  Future updateSensorInterval({required int sensorId, Duration? interval}) =>
+  Future<void> updateSensorInterval({
+    required int sensorId,
+    required Duration interval,
+  }) =>
       _sensorChannel.updateSensorInterval(
           sensorId: sensorId, interval: interval);
 }
