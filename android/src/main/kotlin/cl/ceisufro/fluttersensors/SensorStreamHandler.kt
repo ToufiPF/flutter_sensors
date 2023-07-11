@@ -5,81 +5,87 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import io.flutter.plugin.common.EventChannel
+import io.flutter.plugin.common.EventChannel.EventSink
 import java.util.*
 
 
-class SensorStreamHandler(private val sensorManager: SensorManager, sensorId: Int, private var interval: Int?) : EventChannel.StreamHandler, SensorEventListener {
+class SensorStreamHandler(
+    private val sensorManager: SensorManager, 
+    private val sensorId: Int, 
+    interval: Int?,
+) : EventChannel.StreamHandler {
+    private var delayUs: Int = interval ?: SensorManager.SENSOR_DELAY_NORMAL
     private val sensor: Sensor? = sensorManager.getDefaultSensor(sensorId)
-    private var eventSink: EventChannel.EventSink? = null
-    private var lastUpdate: Calendar = Calendar.getInstance()
-    private var customDelay: Boolean = false
+    private var eventSink: EventSink? = null
+    private var sensorListener: SensorEventListener? = null
 
-    init {
-        interval = interval ?: SensorManager.SENSOR_DELAY_NORMAL
-        configSensor(interval!!)
-    }
-
-    override fun onListen(arguments: Any?, eventSink: EventChannel.EventSink?) {
+    override fun onListen(arguments: Any?, eventSink: EventSink?) {
         if (sensor != null) {
             this.eventSink = eventSink
-            startListener()
+            createListener()
         }
     }
 
     override fun onCancel(arguments: Any?) {
         stopListener()
+        eventSink = null
     }
 
-    private fun configSensor(interval: Int) {
-        this.interval = interval
-        this.customDelay = interval > SensorManager.SENSOR_DELAY_NORMAL
-    }
-
-    private fun startListener() {
-        sensorManager.registerListener(this, sensor, interval!!)
+    private fun createListener() {
+        eventSink?.let {
+            sensorListener = createSensorEventListener(it, sensorId, delayUs)
+            sensorManager.registerListener(sensorListener, sensor, delayUs)
+        }
     }
 
     fun stopListener() {
-        sensorManager.unregisterListener(this)
+        sensorManager.unregisterListener(sensorListener)
+        sensorListener = null
     }
 
     fun updateInterval(interval: Int?) {
         if (interval != null) {
-            configSensor(interval)
+            delayUs = interval
             stopListener()
-            startListener()
+            createListener()
         }
     }
 
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        /// Not implemented
-    }
+    companion object {
+        private fun createSensorEventListener(sink: EventSink, sensorId: Int, delayUs: Int) = object : SensorEventListener {
+            private var lastUpdate: Calendar = Calendar.getInstance()
+            private val customDelay = delayUs > SensorManager.SENSOR_DELAY_NORMAL
 
-    override fun onSensorChanged(event: SensorEvent?) {
-        val currentTime = Calendar.getInstance()
-        if (event != null && isValidTime(currentTime)) {
-            val data = arrayListOf<Float>()
-            event.values.forEach {
-                data.add(it)
+            override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {}
+    
+            override fun onSensorChanged(event: SensorEvent?) {
+                if (event != null && shouldNotify()) {
+                    val data = FloatArray(event.values.size)
+                    event.values.forEachIndexed { index, value ->
+                        data[index] = value.toFloat()
+                    }
+                    val resultMap = mutableMapOf<String, Any?>(
+                        "sensorId" to sensorId,
+                        "data" to data,
+                        "accuracy" to event.accuracy,
+                    )
+                    sink.success(resultMap)
+                }
             }
-            notifyEvent(event.sensor.type, data, event.accuracy)
-            lastUpdate = currentTime
-        }
-    }
 
-    private fun isValidTime(time: Calendar): Boolean {
-        if (customDelay) {
-            val diff = (time.timeInMillis - lastUpdate.timeInMillis) * 1000
-            return diff > interval!!
-        }
-        return true
-    }
+            private fun shouldNotify(): Boolean {
+                if (customDelay) {
+                    val now = Calendar.getInstance()
+                    val diff = (now.timeInMillis - lastUpdate.timeInMillis) * 1000
 
-    private fun notifyEvent(sensorId: Int, data: ArrayList<Float>, accuracy: Int) {
-        val resultMap = mutableMapOf<String, Any?>(
-                "sensorId" to sensorId,
-                "data" to data,
-                "accuracy" to accuracy)
-        eventSink?.success(resultMap)
+                    if (diff > delayUs) {
+                        lastUpdate = now
+                        return true
+                    }
+                    return false
+                }
+                return true
+            }
+        }
     }
 }
