@@ -64,6 +64,7 @@ public class MagneticFieldStreamHandler : NSObject, FlutterStreamHandler {
     }
     
     public func isAvailable() -> Bool {
-        return CMMotionManager().isDeviceMotionAvailable
+        initMotionManager()
+        return motionManager!.isDeviceMotionAvailable
     }
 }
