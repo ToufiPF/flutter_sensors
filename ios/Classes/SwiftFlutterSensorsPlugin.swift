@@ -11,6 +11,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin {
     public let linearAccelerationStreamHandler = LinearAccelerationStreamHandler()
     public let magneticFieldStreamHandler = MagneticFieldStreamHandler()
     public let stepDetectorStreamHandler = StepDetectorStreamHandler()
+    public let barometerStreamHandler = BarometerStreamHandler()
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = SwiftFlutterSensorsPlugin(registrar: registrar)
@@ -84,6 +85,9 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin {
         case HeadingStreamHandler.SENSOR_ID:
             isAvailable = headingStreamHandler.isAvailable()
             break
+        case BarometerStreamHandler.SENSOR_ID:
+            isAvailable = barometerStreamHandler.isAvailable()
+            break
         default:
             isAvailable = false
             break
@@ -91,7 +95,7 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin {
         return isAvailable
     }
     
-    private func updateSensorInterval(sensorId: Int, interval: Double){
+    private func updateSensorInterval(sensorId: Int, interval: Double) {
         switch sensorId {
         case AccelerometerStreamHandler.SENSOR_ID:
             accelerometerStreamHandler.setInterval(interval: interval)
@@ -131,6 +135,9 @@ public class SwiftFlutterSensorsPlugin: NSObject, FlutterPlugin {
             break
         case HeadingStreamHandler.SENSOR_ID:
             channel.setStreamHandler(headingStreamHandler)
+            break
+        case BarometerStreamHandler.SENSOR_ID:
+            channel.setStreamHandler(barometerStreamHandler)
             break
         default:
             started = false

@@ -89,6 +89,19 @@ class Sensors {
   /// https://developer.apple.com/documentation/corelocation/clheading
   static const int ROTATION = 11;
 
+  /// Pressure sensor.
+  /// Returns a single double: the atmospheric pressure in hPa.
+  ///
+  /// Android documentation:
+  ///
+  /// https://developer.android.com/reference/android/hardware/Sensor#TYPE_PRESSURE
+  /// https://developer.android.com/reference/android/hardware/SensorEvent#sensor.type_pressure:
+  ///
+  /// iOS documentation:
+  ///
+  /// https://developer.apple.com/documentation/coremotion/cmaltimeter
+  static const int BAROMETER = 6;
+
   /// Delay of 200000 microseconds between readings.
   /// Rate suitable for screen orientation changes.
   static const Duration SENSOR_DELAY_NORMAL = Duration(microseconds: 200000);
