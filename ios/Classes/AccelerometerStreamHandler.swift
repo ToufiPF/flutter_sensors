@@ -63,6 +63,7 @@ public class AccelerometerStreamHandler : NSObject, FlutterStreamHandler {
     }
     
     public func isAvailable() -> Bool {
-        return CMMotionManager().isAccelerometerAvailable
+        initMotionManager()
+        return motionManager!.isAccelerometerAvailable
     }
 }

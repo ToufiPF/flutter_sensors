@@ -27,7 +27,7 @@ public class StepDetectorStreamHandler : NSObject, FlutterStreamHandler {
     
     private func initPedometer() {
         if pedometer == nil{
-            pedometer = CMPedometer()
+            pedometer = CMPedometer()
         }
     }
     

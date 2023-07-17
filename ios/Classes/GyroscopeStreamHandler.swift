@@ -63,6 +63,7 @@ public class GyroscopeStreamHandler : NSObject, FlutterStreamHandler {
     }
     
     public func isAvailable() -> Bool {
-        return CMMotionManager().isGyroAvailable
+        initMotionManager()
+        return motionManager!.isGyroAvailable
     }
 }
