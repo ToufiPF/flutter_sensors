@@ -46,13 +46,9 @@ public class BarometerStreamHandler : NSObject, FlutterStreamHandler {
         altimeterManager?.stopRelativeAltitudeUpdates()
         altimeterManager = nil
     }
-    
-    public func setInterval(interval: Double) {
-        // noop, changing delay is not supported
-    }
 
     public func isAvailable() -> Bool {
         initManager()
-        return altimeterManager.isRelativeAltitudeAvailable()
+        return altimeterManager!.isRelativeAltitudeAvailable()
     }
 }
