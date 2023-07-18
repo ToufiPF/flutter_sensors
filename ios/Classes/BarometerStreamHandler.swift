@@ -37,7 +37,7 @@ public class BarometerStreamHandler : NSObject, FlutterStreamHandler {
             guard error == nil else { return }
             guard let altitudeData = data else { return }
             // Convert from kilopascals to hPa
-            let dataArray = [ altitudeData.pressure * 10 ]
+            let dataArray = [ altitudeData.pressure.doubleValue * 10.0 ]
             SwiftFlutterSensorsPlugin.notify(sensorId: BarometerStreamHandler.SENSOR_ID, sensorData: dataArray, eventSink: eventSink)
         })
     }
@@ -48,7 +48,6 @@ public class BarometerStreamHandler : NSObject, FlutterStreamHandler {
     }
 
     public func isAvailable() -> Bool {
-        initManager()
-        return altimeterManager!.isRelativeAltitudeAvailable()
+        return CMAltimeter.isRelativeAltitudeAvailable()
     }
 }
