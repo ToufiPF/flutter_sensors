@@ -48,7 +48,6 @@ public class BarometerStreamHandler : NSObject, FlutterStreamHandler {
     }
 
     public func isAvailable() -> Bool {
-        initManager()
-        return altimeterManager!.isRelativeAltitudeAvailable()
+        return CMAltimeter.isRelativeAltitudeAvailable()
     }
 }
