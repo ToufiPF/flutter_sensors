@@ -1,10 +1,11 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_sensors/flutter_sensors.dart';
-import 'package:battery_plus/battery_plus.dart';
+import 'package:provider/provider.dart';
 
-const Map<int, Map<String, dynamic>> trackedSensors = {
+import 'battery.dart';
+import 'controller.dart';
+
+const SensorConfig config1 = {
   Sensors.ACCELEROMETER: {
     'name': 'Accelerometer',
     'nb_values': 3,
@@ -25,150 +26,112 @@ const Map<int, Map<String, dynamic>> trackedSensors = {
     'nb_values': 1,
     'interval': Sensors.SENSOR_DELAY_NORMAL,
   },
-  Sensors.STEP_DETECTOR: {
-    'name': 'Step Detector',
+};
+
+const SensorConfig config2 = {
+  Sensors.ACCELEROMETER: {
+    'name': 'Accelerometer',
+    'nb_values': 3,
+    'interval': Sensors.SENSOR_DELAY_GAME,
+  },
+  Sensors.BAROMETER: {
+    'name': 'Barometer',
     'nb_values': 1,
-    'interval': Duration(seconds: 2),
+    'interval': Sensors.SENSOR_DELAY_NORMAL,
   },
 };
 
-class BatteryStream {
-  final battery = Battery();
-
-  Stream<int> batteryLevelStream() async* {
-    while (true) {
-      final level = await battery.batteryLevel;
-      yield level;
-      await Future.delayed(const Duration(minutes: 1));
-    }
-  }
-}
-
-class Controller extends ChangeNotifier {
-  final List<StreamSubscription> subs = [];
-  final SensorManager _manager = SensorManager();
-
-  void start() {
-                  for (var pair in trackedSensors.entries)
-                    subs.add(_manager
-          .sensorUpdates(sensorId: pair.key, interval: pair.value['interval'])
-          .listen((event) => setState(() => data = event.data)));
-    }
-  }
-}
+const SensorConfig config3 = {
+  Sensors.ACCELEROMETER: {
+    'name': 'Accelerometer',
+    'nb_values': 3,
+    'interval': Sensors.SENSOR_DELAY_UI,
+  },
+  Sensors.BAROMETER: {
+    'name': 'Barometer',
+    'nb_values': 1,
+    'interval': Sensors.SENSOR_DELAY_NORMAL,
+  },
+};
 
 void main() => runApp(const MyApp());
 
-DateTime? start;
-DateTime? end;
-
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-        home: Scaffold(
-          appBar: AppBar(
-            title: const Text('Flutter Sensors Example'),
-          ),
-          body: Container(
-            padding: const EdgeInsets.all(16.0),
-            alignment: AlignmentDirectional.topCenter,
-            child: SingleChildScrollView(
-              child: Column(
-                children: <Widget>[
-                  for (var pair in trackedSensors.entries)
-                    SensorWidget(
-                      sensorId: pair.key,
-                      sensorName: pair.value['name'],
-                      nbValues: pair.value['nb_values'],
-                      interval: pair.value['interval'],
-                    )
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
+  State<MyApp> createState() => _MyAppState();
 }
 
-class SensorWidget extends StatefulWidget {
-  const SensorWidget({
-    super.key,
-    required this.sensorId,
-    required this.sensorName,
-    required this.nbValues,
-    required this.interval,
-  });
+class _MyAppState extends State<MyApp> {
+  SensorConfig config = config1;
 
-  final int sensorId;
-  final String sensorName;
-  final int nbValues;
-  final Duration interval;
-
-  @override
-  State<SensorWidget> createState() => _SensorWidgetState();
-}
-
-class _SensorWidgetState extends State<SensorWidget> {
-  final SensorManager _manager = SensorManager();
-
-  bool available = false;
-  late List<double> data;
-  StreamSubscription<dynamic>? sub;
+  late final BatteryNotifier battery;
 
   @override
   void initState() {
     super.initState();
-    data = List.filled(widget.nbValues, 0.0);
-    _initialize();
-  }
 
-  Future<void> _initialize() async {
-    final available = await _manager.isSensorAvailable(widget.sensorId);
-    if (mounted) {
-      setState(() => this.available = available);
-    }
-  }
-
-  void _startSensor() {
-    if (available) {
-      sub ??= _manager
-          .sensorUpdates(sensorId: widget.sensorId, interval: widget.interval)
-          .listen((event) => setState(() => data = event.data));
-    }
-  }
-
-  void _stopSensor() {
-    sub?.cancel();
-    setState(() => sub = null);
+    battery = BatteryNotifier();
+    battery.addListener(() {
+      if (mounted && battery.batteryIsLow) {
+        final sensors = Provider.of<SensorController>(context, listen: false);
+        sensors.stop();
+      }
+    });
   }
 
   @override
-  Widget build(BuildContext context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text("${widget.sensorName} available? $available"),
-          const SizedBox(height: 16.0),
-          for (var i = 0; i < widget.nbValues; ++i)
-            Text("[$i] = ${data.elementAtOrNull(i)}"),
-          const SizedBox(height: 16.0),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              MaterialButton(
-                color: Colors.green,
-                onPressed: available && sub == null ? _startSensor : null,
-                child: const Text("Start"),
-              ),
-              const SizedBox(width: 8.0),
-              MaterialButton(
-                color: Colors.red,
-                onPressed: available && sub != null ? _stopSensor : null,
-                child: const Text("Stop"),
-              ),
-            ],
-          ),
+  void dispose() {
+    super.dispose();
+    battery.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (context) => SensorController(config)),
+          Provider.value(value: battery),
         ],
+        child: MaterialApp(
+          home: Scaffold(
+            appBar: AppBar(
+              title: const Text('Battery consumption benchmark'),
+            ),
+            body: Container(
+              padding: const EdgeInsets.all(16.0),
+              alignment: AlignmentDirectional.topCenter,
+              child: SingleChildScrollView(
+                child: Consumer2<SensorController, BatteryNotifier>(
+                  builder: (context, sensors, battery, child) => Column(
+                    children: <Widget>[
+                      const Text(
+                          "Recording until ${BatteryNotifier.lowThreshold}%"),
+                      DropdownMenu<SensorConfig>(
+                          enabled: !sensors.isRunning,
+                          initialSelection: config,
+                          onSelected: (event) =>
+                              setState(() => config = event!),
+                          dropdownMenuEntries: const [
+                            DropdownMenuEntry(
+                                value: config1, label: "Acc, gyr, mag @50Hz"),
+                            DropdownMenuEntry(
+                                value: config2, label: "Acc @50Hz"),
+                            DropdownMenuEntry(
+                                value: config3, label: "Acc @10Hz"),
+                          ]),
+                      ElevatedButton(
+                        onPressed: sensors.isRunning ? null : sensors.start,
+                        child: const Text("Start"),
+                      ),
+                      Text("Running? ${sensors.isRunning}"),
+                      Text("Config: ${sensors.config}"),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       );
 }
