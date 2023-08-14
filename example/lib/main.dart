@@ -3,61 +3,64 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_sensors/flutter_sensors.dart';
 
+const Map<int, Map<String, dynamic>> trackedSensors = {
+  Sensors.ACCELEROMETER: {
+    'name': 'Accelerometer',
+    'nb_values': 3,
+    'interval': Sensors.SENSOR_DELAY_GAME,
+  },
+  Sensors.GYROSCOPE: {
+    'name': 'Gyroscope',
+    'nb_values': 3,
+    'interval': Sensors.SENSOR_DELAY_GAME,
+  },
+  Sensors.MAGNETIC_FIELD: {
+    'name': 'Magnetometer',
+    'nb_values': 3,
+    'interval': Sensors.SENSOR_DELAY_GAME,
+  },
+  Sensors.BAROMETER: {
+    'name': 'Barometer',
+    'nb_values': 1,
+    'interval': Sensors.SENSOR_DELAY_NORMAL,
+  },
+  Sensors.STEP_DETECTOR: {
+    'name': 'Step Detector',
+    'nb_values': 1,
+    'interval': Duration(seconds: 2),
+  },
+};
+
 void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
-  static const Map<int, Map<String, dynamic>> trackedSensors = {
-    Sensors.ACCELEROMETER: {
-      'name': 'Accelerometer',
-      'nb_values': 3,
-      'interval': Sensors.SENSOR_DELAY_GAME,
-    },
-    Sensors.GYROSCOPE: {
-      'name': 'Gyroscope',
-      'nb_values': 3,
-      'interval': Sensors.SENSOR_DELAY_UI,
-    },
-    Sensors.BAROMETER: {
-      'name': 'Barometer',
-      'nb_values': 1,
-      'interval': Sensors.SENSOR_DELAY_NORMAL,
-    },
-    Sensors.STEP_DETECTOR: {
-      'name': 'Step Detector',
-      'nb_values': 1,
-      'interval': Duration(seconds: 2),
-    },
-  };
-
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Flutter Sensors Example'),
-        ),
-        body: Container(
-          padding: const EdgeInsets.all(16.0),
-          alignment: AlignmentDirectional.topCenter,
-          child: SingleChildScrollView(
-            child: Column(
-              children: <Widget>[
-                for (var pair in trackedSensors.entries)
-                  SensorWidget(
-                    sensorId: pair.key,
-                    sensorName: pair.value['name'],
-                    nbValues: pair.value['nb_values'],
-                    interval: pair.value['interval'],
-                  )
-              ],
+  Widget build(BuildContext context) => MaterialApp(
+        home: Scaffold(
+          appBar: AppBar(
+            title: const Text('Flutter Sensors Example'),
+          ),
+          body: Container(
+            padding: const EdgeInsets.all(16.0),
+            alignment: AlignmentDirectional.topCenter,
+            child: SingleChildScrollView(
+              child: Column(
+                children: <Widget>[
+                  for (var pair in trackedSensors.entries)
+                    SensorWidget(
+                      sensorId: pair.key,
+                      sensorName: pair.value['name'],
+                      nbValues: pair.value['nb_values'],
+                      interval: pair.value['interval'],
+                    )
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 class SensorWidget extends StatefulWidget {
